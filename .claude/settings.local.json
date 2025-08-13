@@ -22,7 +22,9 @@
       "Bash(git rm:*)",
       "Bash(git rev-list:*)",
       "Bash(sed:*)",
-      "Bash(npx supabase migration:*)"
+      "Bash(npx supabase migration:*)",
+      "Bash(curl:*)",
+      "Bash(pnpm list:*)"
     ],
     "deny": [],
     "ask": []
