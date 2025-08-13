@@ -11,11 +11,16 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
  */
 export const createSupabaseClient = () => {
   if (!supabaseUrl || !supabaseAnonKey) {
-    console.warn('Missing Supabase environment variables')
+    console.error('Missing Supabase environment variables:', {
+      url: !!supabaseUrl,
+      key: !!supabaseAnonKey
+    })
     return null
   }
   
-  return createBrowserClient<Database>(supabaseUrl, supabaseAnonKey)
+  console.log('Creating Supabase client with URL:', supabaseUrl)
+  
+  return createBrowserClient(supabaseUrl, supabaseAnonKey)
 }
 
 
@@ -24,7 +29,7 @@ export const createSupabaseClient = () => {
  * Use this when you don't need auth helpers
  */
 export const supabase = supabaseUrl && supabaseAnonKey 
-  ? createClient<Database>(supabaseUrl, supabaseAnonKey, {
+  ? createClient(supabaseUrl, supabaseAnonKey, {
       auth: {
         autoRefreshToken: true,
         persistSession: true,
@@ -71,13 +76,21 @@ export const getCurrentSession = async () => {
  * Sign in with Google OAuth
  */
 export const signInWithGoogle = async (redirectTo?: string) => {
+  console.log('🔍 signInWithGoogle called with redirectTo:', redirectTo)
+  
   const supabase = createSupabaseClient()
-  if (!supabase) throw new Error('Supabase client not available')
+  if (!supabase) {
+    console.error('❌ Supabase client not available')
+    throw new Error('Supabase client not available')
+  }
+  
+  const callbackUrl = redirectTo || `${window.location.origin}/auth/callback`
+  console.log('🔗 Using callback URL:', callbackUrl)
   
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: redirectTo || `${window.location.origin}/auth/callback`,
+      redirectTo: callbackUrl,
       queryParams: {
         access_type: 'offline',
         prompt: 'consent',
@@ -86,10 +99,11 @@ export const signInWithGoogle = async (redirectTo?: string) => {
   })
   
   if (error) {
-    console.error('Error signing in with Google:', error)
+    console.error('❌ Google OAuth error:', error)
     throw error
   }
   
+  console.log('✅ Google OAuth initiated:', data)
   return data
 }
 
@@ -97,8 +111,13 @@ export const signInWithGoogle = async (redirectTo?: string) => {
  * Sign up with email and password
  */
 export const signUpWithEmail = async (email: string, password: string, fullName: string) => {
+  console.log('🔍 signUpWithEmail called:', { email, fullName })
+  
   const supabase = createSupabaseClient()
-  if (!supabase) throw new Error('Supabase client not available')
+  if (!supabase) {
+    console.error('❌ Supabase client not available for signup')
+    throw new Error('Supabase client not available')
+  }
   
   const { data, error } = await supabase.auth.signUp({
     email,
@@ -112,10 +131,11 @@ export const signUpWithEmail = async (email: string, password: string, fullName:
   })
   
   if (error) {
-    console.error('Error signing up:', error)
+    console.error('❌ Email signup error:', error)
     throw error
   }
   
+  console.log('✅ Email signup success:', data)
   return data
 }
 
@@ -123,8 +143,13 @@ export const signUpWithEmail = async (email: string, password: string, fullName:
  * Sign in with email and password
  */
 export const signInWithEmail = async (email: string, password: string) => {
+  console.log('🔍 signInWithEmail called:', { email })
+  
   const supabase = createSupabaseClient()
-  if (!supabase) throw new Error('Supabase client not available')
+  if (!supabase) {
+    console.error('❌ Supabase client not available for signin')
+    throw new Error('Supabase client not available')
+  }
   
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
@@ -132,10 +157,11 @@ export const signInWithEmail = async (email: string, password: string) => {
   })
   
   if (error) {
-    console.error('Error signing in:', error)
+    console.error('❌ Email signin error:', error)
     throw error
   }
   
+  console.log('✅ Email signin success:', data)
   return data
 }
 

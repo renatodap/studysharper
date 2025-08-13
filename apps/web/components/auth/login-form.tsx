@@ -38,16 +38,18 @@ export function LoginForm({ redirectTo, className }: LoginFormProps) {
   const router = useRouter()
 
   const handleGoogleSignIn = async () => {
+    console.log('🔍 LoginForm: Google sign in button clicked')
     try {
       setIsGoogleLoading(true)
       
+      console.log('🔍 LoginForm: Calling signInWithGoogle with redirectTo:', redirectTo)
       await signInWithGoogle(redirectTo)
       
       // Note: The actual redirect happens in the OAuth flow
       toast.success("Redirecting to Google...")
       
     } catch (error: any) {
-      console.error("Google sign in error:", error)
+      console.error("❌ LoginForm: Google sign in error:", error)
       const errorMessage = handleAuthError(error)
       toast.error(errorMessage)
     } finally {
@@ -57,6 +59,7 @@ export function LoginForm({ redirectTo, className }: LoginFormProps) {
 
   const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
+    console.log('🔍 LoginForm: Email sign in form submitted')
     
     if (!email || !password) {
       toast.error("Please fill in all fields")
@@ -66,15 +69,17 @@ export function LoginForm({ redirectTo, className }: LoginFormProps) {
     try {
       setIsLoading(true)
       
+      console.log('🔍 LoginForm: Calling signInWithEmail')
       const result = await signInWithEmail(email, password)
       
       if (result.user) {
+        console.log('✅ LoginForm: Sign in successful, redirecting to:', redirectTo || "/dashboard")
         toast.success("Successfully signed in!")
         router.push(redirectTo || "/dashboard")
       }
       
     } catch (error: any) {
-      console.error("Email sign in error:", error)
+      console.error("❌ LoginForm: Email sign in error:", error)
       const errorMessage = handleAuthError(error)
       toast.error(errorMessage)
     } finally {
