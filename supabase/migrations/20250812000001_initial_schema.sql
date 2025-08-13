@@ -2,14 +2,33 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "vector";
 
--- Create custom types
-CREATE TYPE assessment_type AS ENUM ('exam', 'quiz', 'assignment', 'project', 'presentation');
-CREATE TYPE task_status AS ENUM ('pending', 'in_progress', 'completed', 'cancelled');
-CREATE TYPE study_method AS ENUM ('reading', 'flashcards', 'practice_problems', 'writing', 'discussion', 'video');
-CREATE TYPE resource_type AS ENUM ('pdf', 'url', 'video', 'audio', 'image', 'document');
+-- Create custom types (if they don't exist)
+DO $$ BEGIN
+    CREATE TYPE assessment_type AS ENUM ('exam', 'quiz', 'assignment', 'project', 'presentation');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE TYPE task_status AS ENUM ('pending', 'in_progress', 'completed', 'cancelled');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE TYPE study_method AS ENUM ('reading', 'flashcards', 'practice_problems', 'writing', 'discussion', 'video');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE TYPE resource_type AS ENUM ('pdf', 'url', 'video', 'audio', 'image', 'document');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
 -- Users table (extends Supabase auth.users)
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     email TEXT NOT NULL UNIQUE,
     full_name TEXT NOT NULL,
@@ -21,7 +40,7 @@ CREATE TABLE users (
 );
 
 -- Schools table
-CREATE TABLE schools (
+CREATE TABLE IF NOT EXISTS schools (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
@@ -30,7 +49,7 @@ CREATE TABLE schools (
 );
 
 -- Terms table
-CREATE TABLE terms (
+CREATE TABLE IF NOT EXISTS terms (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     school_id UUID NOT NULL REFERENCES schools(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
@@ -41,7 +60,7 @@ CREATE TABLE terms (
 );
 
 -- Courses table
-CREATE TABLE courses (
+CREATE TABLE IF NOT EXISTS courses (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     term_id UUID NOT NULL REFERENCES terms(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
@@ -53,7 +72,7 @@ CREATE TABLE courses (
 );
 
 -- Subjects table
-CREATE TABLE subjects (
+CREATE TABLE IF NOT EXISTS subjects (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     course_id UUID NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
@@ -63,7 +82,7 @@ CREATE TABLE subjects (
 );
 
 -- Assessments table
-CREATE TABLE assessments (
+CREATE TABLE IF NOT EXISTS assessments (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     course_id UUID NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
     title TEXT NOT NULL,
@@ -77,7 +96,7 @@ CREATE TABLE assessments (
 );
 
 -- Tasks table
-CREATE TABLE tasks (
+CREATE TABLE IF NOT EXISTS tasks (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     course_id UUID NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
     assessment_id UUID REFERENCES assessments(id) ON DELETE SET NULL,
@@ -92,7 +111,7 @@ CREATE TABLE tasks (
 );
 
 -- Task dependencies table
-CREATE TABLE task_dependencies (
+CREATE TABLE IF NOT EXISTS task_dependencies (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     task_id UUID NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
     depends_on_task_id UUID NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
@@ -102,7 +121,7 @@ CREATE TABLE task_dependencies (
 );
 
 -- Study plans table
-CREATE TABLE study_plans (
+CREATE TABLE IF NOT EXISTS study_plans (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
@@ -114,7 +133,7 @@ CREATE TABLE study_plans (
 );
 
 -- Study blocks table (AI-generated scheduled study sessions)
-CREATE TABLE study_blocks (
+CREATE TABLE IF NOT EXISTS study_blocks (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     study_plan_id UUID NOT NULL REFERENCES study_plans(id) ON DELETE CASCADE,
     task_id UUID REFERENCES tasks(id) ON DELETE SET NULL,
@@ -128,7 +147,7 @@ CREATE TABLE study_blocks (
 );
 
 -- Study sessions table (actual completed study time)
-CREATE TABLE study_sessions (
+CREATE TABLE IF NOT EXISTS study_sessions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     study_block_id UUID REFERENCES study_blocks(id) ON DELETE SET NULL,
@@ -142,7 +161,7 @@ CREATE TABLE study_sessions (
 );
 
 -- Notes table
-CREATE TABLE notes (
+CREATE TABLE IF NOT EXISTS notes (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     subject_id UUID REFERENCES subjects(id) ON DELETE SET NULL,
@@ -155,7 +174,7 @@ CREATE TABLE notes (
 );
 
 -- Note embeddings table (for RAG)
-CREATE TABLE note_embeddings (
+CREATE TABLE IF NOT EXISTS note_embeddings (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     note_id UUID NOT NULL REFERENCES notes(id) ON DELETE CASCADE,
     chunk_text TEXT NOT NULL,
@@ -165,7 +184,7 @@ CREATE TABLE note_embeddings (
 );
 
 -- Resources table (files, URLs, etc.)
-CREATE TABLE resources (
+CREATE TABLE IF NOT EXISTS resources (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     title TEXT NOT NULL,
@@ -177,7 +196,7 @@ CREATE TABLE resources (
 );
 
 -- Decks table (spaced repetition card collections)
-CREATE TABLE decks (
+CREATE TABLE IF NOT EXISTS decks (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     subject_id UUID REFERENCES subjects(id) ON DELETE SET NULL,
@@ -187,7 +206,7 @@ CREATE TABLE decks (
 );
 
 -- Cards table (spaced repetition flashcards)
-CREATE TABLE cards (
+CREATE TABLE IF NOT EXISTS cards (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     deck_id UUID NOT NULL REFERENCES decks(id) ON DELETE CASCADE,
     front TEXT NOT NULL,
@@ -197,7 +216,7 @@ CREATE TABLE cards (
 );
 
 -- Reviews table (spaced repetition review history)
-CREATE TABLE reviews (
+CREATE TABLE IF NOT EXISTS reviews (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     card_id UUID NOT NULL REFERENCES cards(id) ON DELETE CASCADE,
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -211,7 +230,7 @@ CREATE TABLE reviews (
 );
 
 -- Metrics table (performance tracking)
-CREATE TABLE metrics (
+CREATE TABLE IF NOT EXISTS metrics (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     metric_type TEXT NOT NULL, -- 'study_minutes', 'retention_rate', 'focus_score', etc.
@@ -221,7 +240,7 @@ CREATE TABLE metrics (
 );
 
 -- Events table (user activity tracking)
-CREATE TABLE events (
+CREATE TABLE IF NOT EXISTS events (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     event_type TEXT NOT NULL, -- 'study_session_start', 'card_reviewed', etc.
@@ -230,32 +249,32 @@ CREATE TABLE events (
 );
 
 -- Create indexes for performance
-CREATE INDEX idx_schools_user_id ON schools(user_id);
-CREATE INDEX idx_terms_school_id ON terms(school_id);
-CREATE INDEX idx_courses_term_id ON courses(term_id);
-CREATE INDEX idx_subjects_course_id ON subjects(course_id);
-CREATE INDEX idx_assessments_course_id ON assessments(course_id);
-CREATE INDEX idx_assessments_due_date ON assessments(due_date);
-CREATE INDEX idx_tasks_course_id ON tasks(course_id);
-CREATE INDEX idx_tasks_due_date ON tasks(due_date);
-CREATE INDEX idx_tasks_status ON tasks(status);
-CREATE INDEX idx_study_blocks_scheduled_start ON study_blocks(scheduled_start);
-CREATE INDEX idx_study_sessions_user_id ON study_sessions(user_id);
-CREATE INDEX idx_study_sessions_started_at ON study_sessions(started_at);
-CREATE INDEX idx_notes_user_id ON notes(user_id);
-CREATE INDEX idx_notes_subject_id ON notes(subject_id);
-CREATE INDEX idx_note_embeddings_note_id ON note_embeddings(note_id);
-CREATE INDEX idx_cards_deck_id ON cards(deck_id);
-CREATE INDEX idx_reviews_card_id ON reviews(card_id);
-CREATE INDEX idx_reviews_user_id ON reviews(user_id);
-CREATE INDEX idx_reviews_next_review ON reviews(next_review);
-CREATE INDEX idx_metrics_user_id ON metrics(user_id);
-CREATE INDEX idx_metrics_type ON metrics(metric_type);
-CREATE INDEX idx_events_user_id ON events(user_id);
-CREATE INDEX idx_events_type ON events(event_type);
+CREATE INDEX IF NOT EXISTS idx_schools_user_id ON schools(user_id);
+CREATE INDEX IF NOT EXISTS idx_terms_school_id ON terms(school_id);
+CREATE INDEX IF NOT EXISTS idx_courses_term_id ON courses(term_id);
+CREATE INDEX IF NOT EXISTS idx_subjects_course_id ON subjects(course_id);
+CREATE INDEX IF NOT EXISTS idx_assessments_course_id ON assessments(course_id);
+CREATE INDEX IF NOT EXISTS idx_assessments_due_date ON assessments(due_date);
+CREATE INDEX IF NOT EXISTS idx_tasks_course_id ON tasks(course_id);
+CREATE INDEX IF NOT EXISTS idx_tasks_due_date ON tasks(due_date);
+CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);
+CREATE INDEX IF NOT EXISTS idx_study_blocks_scheduled_start ON study_blocks(scheduled_start);
+CREATE INDEX IF NOT EXISTS idx_study_sessions_user_id ON study_sessions(user_id);
+CREATE INDEX IF NOT EXISTS idx_study_sessions_started_at ON study_sessions(started_at);
+CREATE INDEX IF NOT EXISTS idx_notes_user_id ON notes(user_id);
+CREATE INDEX IF NOT EXISTS idx_notes_subject_id ON notes(subject_id);
+CREATE INDEX IF NOT EXISTS idx_note_embeddings_note_id ON note_embeddings(note_id);
+CREATE INDEX IF NOT EXISTS idx_cards_deck_id ON cards(deck_id);
+CREATE INDEX IF NOT EXISTS idx_reviews_card_id ON reviews(card_id);
+CREATE INDEX IF NOT EXISTS idx_reviews_user_id ON reviews(user_id);
+CREATE INDEX IF NOT EXISTS idx_reviews_next_review ON reviews(next_review);
+CREATE INDEX IF NOT EXISTS idx_metrics_user_id ON metrics(user_id);
+CREATE INDEX IF NOT EXISTS idx_metrics_type ON metrics(metric_type);
+CREATE INDEX IF NOT EXISTS idx_events_user_id ON events(user_id);
+CREATE INDEX IF NOT EXISTS idx_events_type ON events(event_type);
 
 -- Vector similarity search index
-CREATE INDEX idx_note_embeddings_vector ON note_embeddings USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
+CREATE INDEX IF NOT EXISTS idx_note_embeddings_vector ON note_embeddings USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
 
 -- Update triggers
 CREATE OR REPLACE FUNCTION update_updated_at_column()

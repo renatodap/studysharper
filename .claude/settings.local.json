@@ -20,7 +20,9 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(git rm:*)",
-      "Bash(git rev-list:*)"
+      "Bash(git rev-list:*)",
+      "Bash(sed:*)",
+      "Bash(npx supabase migration:*)"
     ],
     "deny": [],
     "ask": []
