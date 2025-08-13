@@ -84,13 +84,14 @@ export const signInWithGoogle = async (redirectTo?: string) => {
     throw new Error('Supabase client not available')
   }
   
-  const callbackUrl = redirectTo || `${window.location.origin}/auth/callback`
-  console.log('🔗 Using callback URL:', callbackUrl)
+  const callbackUrl = `${window.location.origin}/auth/callback`
+  const finalRedirectTo = redirectTo ? `${callbackUrl}?redirect_to=${encodeURIComponent(redirectTo)}` : callbackUrl
+  console.log('🔗 Using callback URL:', finalRedirectTo)
   
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: callbackUrl,
+      redirectTo: finalRedirectTo,
       queryParams: {
         access_type: 'offline',
         prompt: 'consent',

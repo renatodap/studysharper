@@ -8,6 +8,13 @@ export async function GET(request: NextRequest) {
   const origin = requestUrl.origin
   const redirectTo = requestUrl.searchParams.get('redirect_to')?.toString()
 
+  console.log('🔍 Auth callback called:', {
+    code: code ? 'present' : 'missing',
+    origin,
+    redirectTo,
+    fullUrl: request.url
+  })
+
   if (code) {
     const cookieStore = cookies()
     const supabase = createServerClient(
@@ -29,19 +36,25 @@ export async function GET(request: NextRequest) {
     )
     
     try {
-      const { error } = await supabase.auth.exchangeCodeForSession(code)
+      console.log('🔍 Exchanging code for session...')
+      const { data, error } = await supabase.auth.exchangeCodeForSession(code)
       
       if (error) {
-        console.error('Auth callback error:', error)
-        return NextResponse.redirect(`${origin}/auth/auth-code-error`)
+        console.error('❌ Auth callback error:', error)
+        return NextResponse.redirect(`${origin}/auth/auth-code-error?error=${encodeURIComponent(error.message)}`)
       }
+      
+      console.log('✅ Auth callback success:', data.user?.email)
     } catch (error) {
-      console.error('Auth callback exception:', error)
-      return NextResponse.redirect(`${origin}/auth/auth-code-error`)
+      console.error('❌ Auth callback exception:', error)
+      return NextResponse.redirect(`${origin}/auth/auth-code-error?error=${encodeURIComponent(String(error))}`)
     }
+  } else {
+    console.log('⚠️ No auth code provided')
   }
 
   // URL to redirect to after sign up process completes
   const redirectUrl = redirectTo || `${origin}/dashboard`
+  console.log('🔗 Redirecting to:', redirectUrl)
   return NextResponse.redirect(redirectUrl)
 }
