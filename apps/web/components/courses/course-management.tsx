@@ -101,7 +101,6 @@ export function CourseManagement({ initialSchools, currentTerm, userId }: Course
         
         {showSchoolForm && (
           <SchoolForm
-            userId={userId}
             onSuccess={refreshData}
             onCancel={() => setShowSchoolForm(false)}
           />
@@ -409,7 +408,6 @@ export function CourseManagement({ initialSchools, currentTerm, userId }: Course
       {/* Forms */}
       {showSchoolForm && (
         <SchoolForm
-          userId={userId}
           onSuccess={() => {
             setShowSchoolForm(false)
             refreshData()
@@ -420,7 +418,7 @@ export function CourseManagement({ initialSchools, currentTerm, userId }: Course
 
       {showTermForm && selectedSchool && (
         <TermForm
-          schoolId={selectedSchool.id}
+          school_id={selectedSchool.id}
           onSuccess={() => {
             setShowTermForm(false)
             refreshData()
@@ -431,7 +429,7 @@ export function CourseManagement({ initialSchools, currentTerm, userId }: Course
 
       {showCourseForm && selectedTerm && (
         <CourseForm
-          termId={selectedTerm.id}
+          term_id={selectedTerm.id}
           onSuccess={() => {
             setShowCourseForm(false)
             refreshData()
@@ -442,7 +440,7 @@ export function CourseManagement({ initialSchools, currentTerm, userId }: Course
 
       {showSubjectForm && selectedCourse && (
         <SubjectForm
-          courseId={selectedCourse.id}
+          course_id={selectedCourse.id}
           onSuccess={() => {
             setShowSubjectForm(false)
             refreshData()
