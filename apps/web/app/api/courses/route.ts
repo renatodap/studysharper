@@ -1,10 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import type { CreateCourseData, Course } from '@/types/academic'
+
+function createSupabaseClient() {
+  const cookieStore = cookies()
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value
+        },
+      },
+    }
+  )
+}
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    const supabase = createSupabaseClient()
     
     const { data: { session }, error: authError } = await supabase.auth.getSession()
     
@@ -63,7 +79,7 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    const supabase = createSupabaseClient()
     
     const { data: { session }, error: authError } = await supabase.auth.getSession()
     
@@ -124,7 +140,7 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    const supabase = createSupabaseClient()
     
     const { data: { session }, error: authError } = await supabase.auth.getSession()
     
@@ -175,13 +191,54 @@ export async function DELETE(request: NextRequest) {
   }
 }
 
-export async function GET() {
-  return NextResponse.json({ 
-    message: 'Courses API - POST to create, PUT to update, DELETE to remove',
-    required: {
-      POST: ['name', 'termId'],
-      PUT: ['id', 'name'],
-      DELETE: ['id (query param)']
+export async function GET(request: NextRequest) {
+  try {
+    const supabase = createSupabaseClient()
+    
+    const { data: { session }, error: authError } = await supabase.auth.getSession()
+    
+    if (authError || !session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-  })
+
+    const { searchParams } = new URL(request.url)
+    const termId = searchParams.get('termId')
+
+    if (!termId) {
+      return NextResponse.json({ error: 'Term ID is required' }, { status: 400 })
+    }
+
+    // Verify term ownership first
+    const { data: term, error: termError } = await supabase
+      .from('terms')
+      .select(`
+        id,
+        schools!inner(user_id)
+      `)
+      .eq('id', termId)
+      .single()
+
+    if (termError || !term || (term.schools as any).user_id !== session.user.id) {
+      return NextResponse.json({ error: 'Term not found' }, { status: 404 })
+    }
+
+    const { data: courses, error } = await supabase
+      .from('courses')
+      .select('*')
+      .eq('term_id', termId)
+      .order('created_at', { ascending: true })
+
+    if (error) {
+      console.error('Database error:', error)
+      return NextResponse.json({ error: 'Failed to fetch courses' }, { status: 500 })
+    }
+
+    return NextResponse.json({ courses })
+
+  } catch (error) {
+    console.error('Courses fetch error:', error)
+    return NextResponse.json({ 
+      error: error instanceof Error ? error.message : 'Internal server error' 
+    }, { status: 500 })
+  }
 }

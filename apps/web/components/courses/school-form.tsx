@@ -8,18 +8,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Loader2, AlertCircle } from 'lucide-react'
+import { useAcademic } from '@/hooks/use-academic'
+import type { School } from '@/types/academic'
 
 interface SchoolFormProps {
-  userId: string
-  school?: any
+  school?: School
   onSuccess: () => void
   onCancel: () => void
 }
 
-export function SchoolForm({ userId, school, onSuccess, onCancel }: SchoolFormProps) {
+export function SchoolForm({ school, onSuccess, onCancel }: SchoolFormProps) {
+  const { createSchool, updateSchool } = useAcademic()
   const [formData, setFormData] = useState({
     name: school?.name || '',
-    type: school?.type || 'college'
+    type: school?.type || 'college' as School['type']
   })
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
@@ -30,24 +32,11 @@ export function SchoolForm({ userId, school, onSuccess, onCancel }: SchoolFormPr
     setError('')
 
     try {
-      const response = await fetch('/api/schools', {
-        method: school ? 'PUT' : 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...formData,
-          id: school?.id,
-          userId
-        })
-      })
-
-      const result = await response.json()
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to save school')
+      if (school) {
+        await updateSchool(school.id, formData)
+      } else {
+        await createSchool(formData)
       }
-
       onSuccess()
     } catch (error) {
       setError(error instanceof Error ? error.message : 'An error occurred')
@@ -81,7 +70,7 @@ export function SchoolForm({ userId, school, onSuccess, onCancel }: SchoolFormPr
             <Label htmlFor="type">School Type</Label>
             <Select
               value={formData.type}
-              onValueChange={(value: string) => setFormData(prev => ({ ...prev, type: value }))}
+              onValueChange={(value: School['type']) => setFormData(prev => ({ ...prev, type: value }))}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select school type" />
@@ -90,8 +79,6 @@ export function SchoolForm({ userId, school, onSuccess, onCancel }: SchoolFormPr
                 <SelectItem value="high_school">High School</SelectItem>
                 <SelectItem value="college">College</SelectItem>
                 <SelectItem value="university">University</SelectItem>
-                <SelectItem value="community_college">Community College</SelectItem>
-                <SelectItem value="trade_school">Trade School</SelectItem>
                 <SelectItem value="other">Other</SelectItem>
               </SelectContent>
             </Select>

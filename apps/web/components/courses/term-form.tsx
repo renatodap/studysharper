@@ -8,20 +8,25 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Loader2, AlertCircle } from 'lucide-react'
+import { useAcademic } from '@/hooks/use-academic'
+import { validateAcademicDates } from '@/lib/academic'
+import type { Term } from '@/types/academic'
 
 interface TermFormProps {
-  schoolId: string
-  term?: any
+  school_id: string
+  term?: Term
   onSuccess: () => void
   onCancel: () => void
 }
 
-export function TermForm({ schoolId, term, onSuccess, onCancel }: TermFormProps) {
+export function TermForm({ school_id, term, onSuccess, onCancel }: TermFormProps) {
+  const { createTerm, updateTerm } = useAcademic()
   const [formData, setFormData] = useState({
     name: term?.name || '',
     start_date: term?.start_date || '',
     end_date: term?.end_date || '',
-    active: term?.active || false
+    active: term?.active || false,
+    school_id
   })
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
@@ -31,25 +36,20 @@ export function TermForm({ schoolId, term, onSuccess, onCancel }: TermFormProps)
     setIsLoading(true)
     setError('')
 
+    // Validate dates
+    const dateError = validateAcademicDates(formData.start_date, formData.end_date)
+    if (dateError) {
+      setError(dateError)
+      setIsLoading(false)
+      return
+    }
+
     try {
-      const response = await fetch('/api/terms', {
-        method: term ? 'PUT' : 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...formData,
-          id: term?.id,
-          schoolId
-        })
-      })
-
-      const result = await response.json()
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to save term')
+      if (term) {
+        await updateTerm(term.id, formData)
+      } else {
+        await createTerm(formData)
       }
-
       onSuccess()
     } catch (error) {
       setError(error instanceof Error ? error.message : 'An error occurred')
@@ -61,9 +61,9 @@ export function TermForm({ schoolId, term, onSuccess, onCancel }: TermFormProps)
   return (
     <Card className="w-full max-w-md mx-auto">
       <CardHeader>
-        <CardTitle>{term ? 'Edit Term' : 'Add Term'}</CardTitle>
+        <CardTitle>{term ? 'Edit Term' : 'Add Academic Term'}</CardTitle>
         <CardDescription>
-          {term ? 'Update term information' : 'Add a new academic term or semester'}
+          {term ? 'Update term information' : 'Add a new semester, quarter, or academic period'}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -72,7 +72,7 @@ export function TermForm({ schoolId, term, onSuccess, onCancel }: TermFormProps)
             <Label htmlFor="name">Term Name</Label>
             <Input
               id="name"
-              placeholder="e.g., Fall 2024, Spring Semester"
+              placeholder="e.g., Fall 2024, Spring 2025"
               value={formData.name}
               onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
               required
@@ -107,11 +107,11 @@ export function TermForm({ schoolId, term, onSuccess, onCancel }: TermFormProps)
             <Checkbox
               id="active"
               checked={formData.active}
-              onCheckedChange={(checked: boolean) => 
-                setFormData(prev => ({ ...prev, active: !!checked }))
+              onCheckedChange={(checked) => 
+                setFormData(prev => ({ ...prev, active: checked as boolean }))
               }
             />
-            <Label htmlFor="active" className="text-sm font-medium">
+            <Label htmlFor="active" className="text-sm">
               Set as active term
             </Label>
           </div>
@@ -136,7 +136,7 @@ export function TermForm({ schoolId, term, onSuccess, onCancel }: TermFormProps)
             <Button 
               type="submit" 
               className="flex-1" 
-              disabled={isLoading || !formData.name.trim()}
+              disabled={isLoading || !formData.name.trim() || !formData.start_date || !formData.end_date}
             >
               {isLoading ? (
                 <>

@@ -4,22 +4,26 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Textarea } from '@/components/ui/textarea'
 import { Loader2, AlertCircle } from 'lucide-react'
+import { useAcademic } from '@/hooks/use-academic'
+import type { Subject } from '@/types/academic'
 
 interface SubjectFormProps {
-  courseId: string
-  subject?: any
+  course_id: string
+  subject?: Subject
   onSuccess: () => void
   onCancel: () => void
 }
 
-export function SubjectForm({ courseId, subject, onSuccess, onCancel }: SubjectFormProps) {
+export function SubjectForm({ course_id, subject, onSuccess, onCancel }: SubjectFormProps) {
+  const { createSubject, updateSubject } = useAcademic()
   const [formData, setFormData] = useState({
     name: subject?.name || '',
-    description: subject?.description || ''
+    description: subject?.description || '',
+    course_id
   })
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
@@ -30,24 +34,11 @@ export function SubjectForm({ courseId, subject, onSuccess, onCancel }: SubjectF
     setError('')
 
     try {
-      const response = await fetch('/api/subjects', {
-        method: subject ? 'PUT' : 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...formData,
-          id: subject?.id,
-          courseId
-        })
-      })
-
-      const result = await response.json()
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to save subject')
+      if (subject) {
+        await updateSubject(subject.id, formData)
+      } else {
+        await createSubject(formData)
       }
-
       onSuccess()
     } catch (error) {
       setError(error instanceof Error ? error.message : 'An error occurred')
@@ -61,7 +52,7 @@ export function SubjectForm({ courseId, subject, onSuccess, onCancel }: SubjectF
       <CardHeader>
         <CardTitle>{subject ? 'Edit Subject' : 'Add Subject'}</CardTitle>
         <CardDescription>
-          {subject ? 'Update subject information' : 'Add a new subject or topic to this course'}
+          {subject ? 'Update subject information' : 'Add a new subject or topic to your course'}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -70,7 +61,7 @@ export function SubjectForm({ courseId, subject, onSuccess, onCancel }: SubjectF
             <Label htmlFor="name">Subject Name</Label>
             <Input
               id="name"
-              placeholder="e.g., Variables and Data Types"
+              placeholder="e.g., Variables and Data Types, Calculus Fundamentals"
               value={formData.name}
               onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
               required
@@ -78,10 +69,10 @@ export function SubjectForm({ courseId, subject, onSuccess, onCancel }: SubjectF
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Description (Optional)</Label>
+            <Label htmlFor="description">Description</Label>
             <Textarea
               id="description"
-              placeholder="Brief description of what this subject covers..."
+              placeholder="Brief description of what this subject covers (optional)"
               value={formData.description}
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
               rows={3}

@@ -7,10 +7,13 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2, AlertCircle } from 'lucide-react'
+import { useAcademic } from '@/hooks/use-academic'
+import { generateCourseColor } from '@/lib/academic'
+import type { Course } from '@/types/academic'
 
 interface CourseFormProps {
-  termId: string
-  course?: any
+  term_id: string
+  course?: Course
   onSuccess: () => void
   onCancel: () => void
 }
@@ -21,12 +24,14 @@ const courseColors = [
   '#F97316', '#6366F1', '#14B8A6', '#F43F5E'
 ]
 
-export function CourseForm({ termId, course, onSuccess, onCancel }: CourseFormProps) {
+export function CourseForm({ term_id, course, onSuccess, onCancel }: CourseFormProps) {
+  const { createCourse, updateCourse } = useAcademic()
   const [formData, setFormData] = useState({
     name: course?.name || '',
     code: course?.code || '',
     credits: course?.credits || 3,
-    color: course?.color || courseColors[0]
+    color: course?.color || generateCourseColor(),
+    term_id
   })
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
@@ -37,24 +42,11 @@ export function CourseForm({ termId, course, onSuccess, onCancel }: CourseFormPr
     setError('')
 
     try {
-      const response = await fetch('/api/courses', {
-        method: course ? 'PUT' : 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...formData,
-          id: course?.id,
-          termId
-        })
-      })
-
-      const result = await response.json()
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to save course')
+      if (course) {
+        await updateCourse(course.id, formData)
+      } else {
+        await createCourse(formData)
       }
-
       onSuccess()
     } catch (error) {
       setError(error instanceof Error ? error.message : 'An error occurred')
@@ -68,7 +60,7 @@ export function CourseForm({ termId, course, onSuccess, onCancel }: CourseFormPr
       <CardHeader>
         <CardTitle>{course ? 'Edit Course' : 'Add Course'}</CardTitle>
         <CardDescription>
-          {course ? 'Update course information' : 'Add a new course to your term'}
+          {course ? 'Update course information' : 'Add a new course to your academic term'}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -85,10 +77,10 @@ export function CourseForm({ termId, course, onSuccess, onCancel }: CourseFormPr
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="code">Course Code (Optional)</Label>
+            <Label htmlFor="code">Course Code</Label>
             <Input
               id="code"
-              placeholder="e.g., CS 101"
+              placeholder="e.g., CS 101, MATH 120 (optional)"
               value={formData.code}
               onChange={(e) => setFormData(prev => ({ ...prev, code: e.target.value }))}
             />
@@ -99,12 +91,12 @@ export function CourseForm({ termId, course, onSuccess, onCancel }: CourseFormPr
             <Input
               id="credits"
               type="number"
-              min="0"
-              max="10"
+              min="1"
+              max="20"
               value={formData.credits}
               onChange={(e) => setFormData(prev => ({ 
                 ...prev, 
-                credits: parseInt(e.target.value) || 0 
+                credits: parseInt(e.target.value) || 3 
               }))}
               required
             />
@@ -112,7 +104,7 @@ export function CourseForm({ termId, course, onSuccess, onCancel }: CourseFormPr
 
           <div className="space-y-2">
             <Label>Course Color</Label>
-            <div className="grid grid-cols-6 gap-2">
+            <div className="flex gap-2 flex-wrap">
               {courseColors.map((color) => (
                 <button
                   key={color}
@@ -120,7 +112,7 @@ export function CourseForm({ termId, course, onSuccess, onCancel }: CourseFormPr
                   className={`w-8 h-8 rounded-full border-2 transition-all ${
                     formData.color === color 
                       ? 'border-foreground scale-110' 
-                      : 'border-muted hover:scale-105'
+                      : 'border-muted-foreground/20 hover:border-muted-foreground/40'
                   }`}
                   style={{ backgroundColor: color }}
                   onClick={() => setFormData(prev => ({ ...prev, color }))}
