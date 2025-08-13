@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createBrowserClient } from '@supabase/ssr'
 import type { Database } from '@/types/database'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
@@ -10,7 +10,12 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
  * This client will automatically handle auth state changes
  */
 export const createSupabaseClient = () => {
-  return createClientComponentClient<Database>()
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.warn('Missing Supabase environment variables')
+    return null
+  }
+  
+  return createBrowserClient<Database>(supabaseUrl, supabaseAnonKey)
 }
 
 
@@ -33,6 +38,8 @@ export const supabase = supabaseUrl && supabaseAnonKey
  */
 export const getCurrentUser = async () => {
   const supabase = createSupabaseClient()
+  if (!supabase) return null
+  
   const { data: { user }, error } = await supabase.auth.getUser()
   
   if (error) {
@@ -48,6 +55,8 @@ export const getCurrentUser = async () => {
  */
 export const getCurrentSession = async () => {
   const supabase = createSupabaseClient()
+  if (!supabase) return null
+  
   const { data: { session }, error } = await supabase.auth.getSession()
   
   if (error) {
@@ -63,6 +72,7 @@ export const getCurrentSession = async () => {
  */
 export const signInWithGoogle = async (redirectTo?: string) => {
   const supabase = createSupabaseClient()
+  if (!supabase) throw new Error('Supabase client not available')
   
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
@@ -84,10 +94,95 @@ export const signInWithGoogle = async (redirectTo?: string) => {
 }
 
 /**
+ * Sign up with email and password
+ */
+export const signUpWithEmail = async (email: string, password: string, fullName: string) => {
+  const supabase = createSupabaseClient()
+  if (!supabase) throw new Error('Supabase client not available')
+  
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      emailRedirectTo: `${window.location.origin}/auth/callback`,
+      data: {
+        full_name: fullName,
+      }
+    }
+  })
+  
+  if (error) {
+    console.error('Error signing up:', error)
+    throw error
+  }
+  
+  return data
+}
+
+/**
+ * Sign in with email and password
+ */
+export const signInWithEmail = async (email: string, password: string) => {
+  const supabase = createSupabaseClient()
+  if (!supabase) throw new Error('Supabase client not available')
+  
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  })
+  
+  if (error) {
+    console.error('Error signing in:', error)
+    throw error
+  }
+  
+  return data
+}
+
+/**
+ * Reset password
+ */
+export const resetPassword = async (email: string) => {
+  const supabase = createSupabaseClient()
+  if (!supabase) throw new Error('Supabase client not available')
+  
+  const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${window.location.origin}/auth/reset-password`,
+  })
+  
+  if (error) {
+    console.error('Error resetting password:', error)
+    throw error
+  }
+  
+  return data
+}
+
+/**
+ * Update password
+ */
+export const updatePassword = async (password: string) => {
+  const supabase = createSupabaseClient()
+  if (!supabase) throw new Error('Supabase client not available')
+  
+  const { data, error } = await supabase.auth.updateUser({
+    password,
+  })
+  
+  if (error) {
+    console.error('Error updating password:', error)
+    throw error
+  }
+  
+  return data
+}
+
+/**
  * Sign out the current user
  */
 export const signOut = async () => {
   const supabase = createSupabaseClient()
+  if (!supabase) throw new Error('Supabase client not available')
   
   const { error } = await supabase.auth.signOut()
   
@@ -110,6 +205,7 @@ export const isAuthenticated = async (): Promise<boolean> => {
  */
 export const onAuthStateChange = (callback: (event: string, session: any) => void) => {
   const supabase = createSupabaseClient()
+  if (!supabase) return { data: { subscription: null }, unsubscribe: () => {} }
   
   return supabase.auth.onAuthStateChange(callback)
 }

@@ -1,15 +1,19 @@
-import Link from 'next/link'
+"use client"
+
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { AlertCircle } from 'lucide-react'
+import { XCircle } from 'lucide-react'
 
 export default function AuthCodeError() {
+  const router = useRouter()
+  
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
-            <AlertCircle className="h-6 w-6 text-red-600" />
+            <XCircle className="h-6 w-6 text-red-600" />
           </div>
           <CardTitle className="text-2xl">Authentication Error</CardTitle>
           <CardDescription>
@@ -26,11 +30,11 @@ export default function AuthCodeError() {
             </ul>
           </div>
           <div className="flex flex-col space-y-2">
-            <Button asChild>
-              <Link href="/">Try Again</Link>
+            <Button onClick={() => router.push('/auth')}>
+              Try Again
             </Button>
-            <Button variant="outline" asChild>
-              <Link href="/support">Get Help</Link>
+            <Button variant="outline" onClick={() => router.push('/')}>
+              Back to Home
             </Button>
           </div>
         </CardContent>
