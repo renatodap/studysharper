@@ -185,6 +185,35 @@ export const resetPassword = async (email: string) => {
 }
 
 /**
+ * Resend confirmation email
+ */
+export const resendConfirmation = async (email: string) => {
+  console.log('🔍 resendConfirmation called:', { email })
+  
+  const supabase = createSupabaseClient()
+  if (!supabase) {
+    console.error('❌ Supabase client not available for resend confirmation')
+    throw new Error('Supabase client not available')
+  }
+  
+  const { data, error } = await supabase.auth.resend({
+    type: 'signup',
+    email,
+    options: {
+      emailRedirectTo: `${window.location.origin}/auth/callback`,
+    }
+  })
+  
+  if (error) {
+    console.error('❌ Resend confirmation error:', error)
+    throw error
+  }
+  
+  console.log('✅ Confirmation email resent:', data)
+  return data
+}
+
+/**
  * Update password
  */
 export const updatePassword = async (password: string) => {

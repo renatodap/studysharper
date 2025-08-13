@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { signInWithGoogle, signInWithEmail, signUpWithEmail, resetPassword, handleAuthError } from "@/lib/supabase"
+import { signInWithGoogle, signInWithEmail, signUpWithEmail, resetPassword, resendConfirmation, handleAuthError } from "@/lib/supabase"
 import { toast } from "sonner"
 import { Eye, EyeOff } from "lucide-react"
 
@@ -27,6 +27,8 @@ export function LoginForm({ redirectTo, className }: LoginFormProps) {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [activeTab, setActiveTab] = useState("signin")
+  const [needsEmailConfirmation, setNeedsEmailConfirmation] = useState(false)
+  const [confirmationEmail, setConfirmationEmail] = useState("")
   
   // Form states
   const [email, setEmail] = useState("")
@@ -80,8 +82,16 @@ export function LoginForm({ redirectTo, className }: LoginFormProps) {
       
     } catch (error: any) {
       console.error("❌ LoginForm: Email sign in error:", error)
-      const errorMessage = handleAuthError(error)
-      toast.error(errorMessage)
+      
+      // Check if it's an email not confirmed error
+      if (error.message?.toLowerCase().includes('email not confirmed')) {
+        setNeedsEmailConfirmation(true)
+        setConfirmationEmail(email)
+        toast.error("Please check your email and click the confirmation link to sign in.")
+      } else {
+        const errorMessage = handleAuthError(error)
+        toast.error(errorMessage)
+      }
     } finally {
       setIsLoading(false)
     }
@@ -153,6 +163,22 @@ export function LoginForm({ redirectTo, className }: LoginFormProps) {
     }
   }
 
+  const handleResendConfirmation = async () => {
+    try {
+      setIsLoading(true)
+      
+      await resendConfirmation(confirmationEmail)
+      toast.success("Confirmation email sent! Please check your inbox.")
+      
+    } catch (error: any) {
+      console.error("❌ LoginForm: Resend confirmation error:", error)
+      const errorMessage = handleAuthError(error)
+      toast.error(errorMessage)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   return (
     <Card className={className}>
       <CardHeader className="space-y-1">
@@ -193,6 +219,30 @@ export function LoginForm({ redirectTo, className }: LoginFormProps) {
           )}
           Continue with Google
         </Button>
+
+        {/* Email Confirmation Notice */}
+        {needsEmailConfirmation && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+            <h3 className="text-sm font-medium text-yellow-800 mb-2">
+              Email Confirmation Required
+            </h3>
+            <p className="text-sm text-yellow-700 mb-3">
+              Please check your email ({confirmationEmail}) and click the confirmation link to sign in.
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleResendConfirmation}
+              disabled={isLoading}
+              className="w-full"
+            >
+              {isLoading ? (
+                <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />
+              ) : null}
+              Resend Confirmation Email
+            </Button>
+          </div>
+        )}
 
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
