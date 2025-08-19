@@ -2,13 +2,171 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  body {
-    @apply bg-gray-950 text-gray-100;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", sans-serif;
+/* ===== STUDYSHARPER DARK-FIRST DESIGN SYSTEM ===== */
+:root {
+  /* Dark-First Color Palette */
+  --blue-500: #3182CE;             /* Primary brand blue */
+  --blue-600: #2B77CB;             /* Darker blue */
+  --blue-400: #4299E1;             /* Lighter blue */
+  --blue-50: #EBF8FF;              /* Very light blue (for light mode) */
+  
+  --bg: #0A0A0A;                   /* Pure black background */
+  --surface: #111418;              /* Near-black surface */
+  --surface-2: #161A1F;            /* Elevated surface */
+  --surface-3: #1D2127;            /* Higher elevation */
+  
+  --text-primary: #FFFFFF;         /* Primary text (white) */
+  --text-secondary: #C7CBD1;       /* Secondary text (light gray) */
+  --text-muted: #8B9096;           /* Muted text (mid gray) */
+  --text-disabled: #6B6F76;        /* Disabled text */
+  
+  --success: #10B981;              /* Success green */
+  --warning: #F59E0B;              /* Warning amber */
+  --error: #EF4444;                /* Error red */
+  --info: #3B82F6;                 /* Info blue */
+  
+  --border: #23272E;               /* Border color */
+  --focus: #E5E7EB;                /* Focus rings */
+  
+  /* Gradients */
+  --gradient-blue: linear-gradient(135deg, #4299E1 0%, #3182CE 100%);
+  --gradient-dark: linear-gradient(135deg, #161A1F 0%, #0A0A0A 100%);
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.2);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.3);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.4);
+  
+  /* Animations */
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
   }
 }
 
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ===== BASE STYLES ===== */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Dark-first design - body always dark */
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text-primary);
+  line-height: 1.6;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* Subtle dark background pattern */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    radial-gradient(circle at 20% 50%, rgba(65, 153, 225, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(49, 130, 206, 0.05) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* ===== TYPOGRAPHY ===== */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+h1 {
+  font-size: clamp(2.5rem, 5vw, 4rem);
+}
+
+h2 {
+  font-size: clamp(2rem, 4vw, 3rem);
+}
+
+h3 {
+  font-size: clamp(1.5rem, 3vw, 2rem);
+}
+
+/* ===== FOCUS STATES ===== */
+*:focus-visible {
+  outline: 2px solid var(--blue-500);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--surface);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--blue-500);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--blue-600);
+}
+
+/* ===== COMPONENT UTILITIES ===== */
 @layer components {
   .container {
     @apply mx-auto px-4 sm:px-6 lg:px-8;
@@ -19,58 +177,25 @@
   }
   
   .btn-secondary {
-    @apply bg-gray-700 text-gray-100 hover:bg-gray-600 px-4 py-2 rounded-md font-medium transition-colors;
+    @apply bg-surface text-text-primary hover:bg-surface-2 px-4 py-2 rounded-md font-medium transition-colors;
   }
   
   .card {
-    @apply bg-gray-900 text-gray-100 rounded-lg border border-gray-800 shadow-sm;
+    @apply bg-surface text-text-primary rounded-lg border border-border shadow-sm;
   }
   
   .input {
-    @apply flex h-10 w-full rounded-md border border-gray-700 bg-gray-900 px-3 py-2 text-sm placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-950 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply flex h-10 w-full rounded-md border border-border bg-surface px-3 py-2 text-sm placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-bg disabled:cursor-not-allowed disabled:opacity-50;
   }
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  @apply bg-gray-900;
-}
-
-::-webkit-scrollbar-thumb {
-  @apply bg-gray-700 rounded-full;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  @apply bg-gray-600;
-}
-
-/* Loading animation */
-@keyframes shimmer {
-  0% {
-    background-position: -200% 0;
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 640px) {
+  h1 {
+    font-size: 2rem;
   }
-  100% {
-    background-position: 200% 0;
+  
+  h2 {
+    font-size: 1.5rem;
   }
 }
-
-.animate-shimmer {
-  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.1) 50%, transparent 100%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-}
-
-/* Dark mode colors using CSS variables for better compatibility */
-.dark-950 { background-color: #0A0B0D; }
-.dark-900 { background-color: #15171A; }
-.dark-800 { background-color: #2C2F34; }
-.dark-700 { background-color: #43474E; }
-
-.brand-500 { color: #0073E6; }
-.brand-400 { color: #0A8FFF; }
-.brand-300 { color: #47ABFF; }
