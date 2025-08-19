@@ -4,15 +4,15 @@ import { Button } from '@/components/ui/Button'
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-dark-950 via-dark-900 to-brand-950">
+    <div className="min-h-screen bg-gradient-to-br from-bg via-surface to-blue-900">
       {/* Hero Section */}
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:50px_50px]" />
-        <div className="absolute inset-0 bg-gradient-to-t from-dark-950 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-bg via-transparent to-transparent" />
         
         <nav className="relative z-10 flex items-center justify-between px-6 py-4 max-w-7xl mx-auto">
           <div className="flex items-center space-x-2">
-            <Brain className="h-8 w-8 text-brand-400" />
+            <Brain className="h-8 w-8 text-blue-400" />
             <span className="text-xl font-bold text-white">StudySharper</span>
           </div>
           
@@ -23,7 +23,7 @@ export default function HomePage() {
               </Button>
             </Link>
             <Link href="/sign-up">
-              <Button className="bg-brand-500 hover:bg-brand-600">
+              <Button className="bg-blue-600 hover:bg-blue-700">
                 Start Free
               </Button>
             </Link>
@@ -31,14 +31,14 @@ export default function HomePage() {
         </nav>
 
         <div className="relative z-10 max-w-7xl mx-auto px-6 py-24 text-center">
-          <div className="inline-flex items-center space-x-2 bg-brand-500/10 rounded-full px-4 py-2 mb-8">
-            <Sparkles className="h-4 w-4 text-brand-400" />
-            <span className="text-sm text-brand-300">AI-Powered Study Companion</span>
+          <div className="inline-flex items-center space-x-2 bg-blue-600/10 rounded-full px-4 py-2 mb-8">
+            <Sparkles className="h-4 w-4 text-blue-400" />
+            <span className="text-sm text-blue-300">AI-Powered Study Companion</span>
           </div>
           
           <h1 className="text-5xl md:text-7xl font-bold text-white mb-6">
             Study Smarter,
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-blue-400">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-600">
               {' '}Not Harder
             </span>
           </h1>
@@ -50,7 +50,7 @@ export default function HomePage() {
           
           <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4">
             <Link href="/sign-up">
-              <Button size="lg" className="bg-brand-500 hover:bg-brand-600 text-white px-8">
+              <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white px-8">
                 Start Free Trial
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
@@ -112,7 +112,7 @@ export default function HomePage() {
       </div>
 
       {/* Pricing Section */}
-      <div className="py-24 px-6 bg-dark-900/50">
+      <div className="py-24 px-6 bg-surface/50">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-white mb-4">Simple, Transparent Pricing</h2>
@@ -181,7 +181,7 @@ export default function HomePage() {
             Join thousands of students already using StudySharper to ace their exams
           </p>
           <Link href="/sign-up">
-            <Button size="lg" className="bg-brand-500 hover:bg-brand-600 text-white px-8">
+            <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white px-8">
               Start Your Free Trial
               <Zap className="ml-2 h-5 w-5" />
             </Button>
@@ -190,10 +190,10 @@ export default function HomePage() {
       </div>
 
       {/* Footer */}
-      <footer className="border-t border-gray-800 py-12 px-6">
+      <footer className="border-t border-border py-12 px-6">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center">
           <div className="flex items-center space-x-2 mb-4 md:mb-0">
-            <Brain className="h-6 w-6 text-brand-400" />
+            <Brain className="h-6 w-6 text-blue-400" />
             <span className="text-lg font-semibold text-white">StudySharper</span>
           </div>
           
@@ -210,8 +210,8 @@ export default function HomePage() {
 
 function FeatureCard({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
   return (
-    <div className="bg-dark-900/50 border border-gray-800 rounded-xl p-6 hover:border-brand-500/50 transition-colors">
-      <div className="text-brand-400 mb-4">{icon}</div>
+    <div className="bg-surface/50 border border-border rounded-xl p-6 hover:border-blue-500/50 transition-colors">
+      <div className="text-blue-400 mb-4">{icon}</div>
       <h3 className="text-xl font-semibold text-white mb-2">{title}</h3>
       <p className="text-gray-400">{description}</p>
     </div>
@@ -238,10 +238,10 @@ function PricingCard({
   highlighted?: boolean
 }) {
   return (
-    <div className={`rounded-xl p-6 ${highlighted ? 'bg-brand-500/10 border-2 border-brand-500' : 'bg-dark-900/50 border border-gray-800'}`}>
+    <div className={`rounded-xl p-6 ${highlighted ? 'bg-blue-600/10 border-2 border-blue-500' : 'bg-surface/50 border border-border'}`}>
       {highlighted && (
         <div className="text-center mb-4">
-          <span className="bg-brand-500 text-white text-sm font-semibold px-3 py-1 rounded-full">Most Popular</span>
+          <span className="bg-blue-600 text-white text-sm font-semibold px-3 py-1 rounded-full">Most Popular</span>
         </div>
       )}
       <div className="text-center mb-6">
@@ -256,7 +256,7 @@ function PricingCard({
       <ul className="space-y-3 mb-8">
         {features.map((feature, index) => (
           <li key={index} className="flex items-start">
-            <svg className="h-5 w-5 text-brand-400 mr-2 mt-0.5 flex-shrink-0" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="h-5 w-5 text-blue-400 mr-2 mt-0.5 flex-shrink-0" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
               <path d="M5 13l4 4L19 7"></path>
             </svg>
             <span className="text-gray-300">{feature}</span>
@@ -265,7 +265,7 @@ function PricingCard({
       </ul>
       
       <Link href={buttonHref} className="block">
-        <Button className={`w-full ${highlighted ? 'bg-brand-500 hover:bg-brand-600' : 'bg-dark-800 hover:bg-dark-700'}`}>
+        <Button className={`w-full ${highlighted ? 'bg-blue-600 hover:bg-blue-700' : 'bg-surface-2 hover:bg-surface-3'}`}>
           {buttonText}
         </Button>
       </Link>
